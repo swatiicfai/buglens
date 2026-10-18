@@ -72,7 +72,7 @@ cp .env.example .env
 
 ### 4. Run the Application
 ```bash
-streamlit run app.py
+python -m streamlit run app.py
 ```
 The app will automatically open in your browser at `http://localhost:8501`.
 
