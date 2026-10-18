@@ -94,17 +94,18 @@ with st.sidebar:
     model_option = st.selectbox(
         "Multimodal Model",
         [
+            "gemini-3.8-flash",
             "gemini-2.5-flash",
             "gemini-2.0-flash",
             "gemini-1.5-flash",
             "Custom Model ID"
         ],
         index=0,
-        help="Select the multimodal model to use. Defaults to the fast and accurate gemini-2.5-flash."
+        help="Select the multimodal model to use. Defaults to the fast and accurate gemini-3.8-flash."
     )
 
     if model_option == "Custom Model ID":
-        selected_model = st.text_input("Enter custom model name", value="gemini-2.5-flash")
+        selected_model = st.text_input("Enter custom model name", value="gemini-3.8-flash")
     else:
         selected_model = model_option
 
