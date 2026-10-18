@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BugLens — Multimodal AI Bug & Issue Copilot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl">🔍</span>
+        <div>
+          <h1 class="font-bold text-lg bg-gradient-to-r from-orange-500 to-amber-400 bg-clip-text text-transparent">BugLens</h1>
+          <p class="text-xs text-slate-400">Multimodal AI Issue & Bug Copilot</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <span class="text-xs bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full font-semibold">Hacktoberfest 2026</span>
+        <span class="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full font-semibold">Gemma & Gemini</span>
+        <a href="https://github.com/swatiicfai/buglens" target="_blank" class="text-slate-400 hover:text-white transition text-lg"><i class="fa-brands fa-github"></i></a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-1 w-full">
+    <!-- Hero -->
+    <div class="text-center mb-8">
+      <h2 class="text-3xl md:text-4xl font-extrabold mb-3">Turn Error Screenshots into <span class="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">GitHub Issues & Code Fixes</span></h2>
+      <p class="text-slate-400 max-w-2xl mx-auto text-sm md:text-base">Upload a screenshot of a broken UI, terminal stack trace, or compiler error. BugLens extracts the error trace, analyzes root causes, and generates ready-to-file GitHub Issues.</p>
+    </div>
+
+    <!-- API Key Bar -->
+    <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 mb-6 shadow-lg">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="flex-1">
+          <label class="block text-xs font-semibold text-slate-300 mb-1">🔑 Gemini API Key <span class="text-slate-500 font-normal">(stored only in your browser session)</span></label>
+          <input type="password" id="apiKey" placeholder="AIzaSy..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500">
+        </div>
+        <div class="w-full md:w-56">
+          <label class="block text-xs font-semibold text-slate-300 mb-1">🤖 Model</label>
+          <select id="modelSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500">
+            <option value="gemini-2.5-flash">gemini-2.5-flash (Fast & Accurate)</option>
+            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+            <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid Inputs -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <!-- Left: Visual Input -->
+      <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-5 flex flex-col justify-between">
+        <div>
+          <h3 class="font-semibold text-sm text-slate-200 mb-3 flex items-center justify-between">
+            <span>1. Visual Input (Screenshot or Error Log)</span>
+            <button id="useSampleBtn" class="text-xs bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 px-2 py-1 rounded border border-orange-500/30 transition">💡 Load Sample Stacktrace</button>
+          </h3>
+          <div id="dropZone" class="border-2 border-dashed border-slate-600 rounded-xl p-6 text-center hover:border-orange-500 transition cursor-pointer relative bg-slate-900/50">
+            <input type="file" id="fileInput" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+            <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-500 mb-2"></i>
+            <p class="text-sm font-medium text-slate-300">Drag & drop or click to upload</p>
+            <p class="text-xs text-slate-500 mt-1">PNG, JPG, WEBP screenshots of logs or UI bugs</p>
+          </div>
+          <!-- Preview -->
+          <div id="previewContainer" class="hidden mt-4">
+            <img id="imagePreview" class="max-h-60 w-full object-contain rounded-lg border border-slate-700 bg-black/40">
+            <p id="fileName" class="text-xs text-slate-400 mt-1 text-center"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Context Input -->
+      <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-5 flex flex-col justify-between">
+        <div>
+          <h3 class="font-semibold text-sm text-slate-200 mb-3">2. Optional Context</h3>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Repository / Project</label>
+              <input type="text" id="projectInput" placeholder="e.g. swatiicfai/buglens" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-orange-500">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">User Notes / Symptoms</label>
+              <textarea id="notesInput" rows="2" placeholder="e.g. Occurs when parsing user payload or clicking submit" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-orange-500"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Suspected Code Snippet</label>
+              <textarea id="codeInput" rows="3" placeholder="def parse_payload(payload): ..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono focus:outline-none focus:border-orange-500"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Button -->
+    <div class="text-center mb-8">
+      <button id="analyzeBtn" class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-orange-500/25 transition transform hover:-translate-y-0.5 text-sm md:text-base flex items-center justify-center space-x-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed">
+        <i class="fa-solid fa-bolt"></i>
+        <span>Analyze Screenshot & Generate Issue</span>
+      </button>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsSection" class="hidden bg-slate-800/90 border border-slate-700 rounded-xl p-6 shadow-xl">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-4 mb-4">
+        <h3 class="text-lg font-bold text-orange-400 flex items-center space-x-2">
+          <span>📋 Triage & Resolution Report</span>
+        </h3>
+        <button id="downloadBtn" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg border border-slate-600 text-slate-200 transition flex items-center space-x-1">
+          <i class="fa-solid fa-download"></i>
+          <span>Download Report (.md)</span>
+        </button>
+      </div>
+      <div id="markdownOutput" class="prose prose-invert max-w-none text-sm leading-relaxed"></div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 bg-slate-950 py-4 text-center text-xs text-slate-500">
+    <p>BugLens — Open Source Multimodal Bug Copilot for Hacktoberfest 2026 | MIT Licensed</p>
+  </footer>
+
+  <script>
+    let activeImageBase64 = null;
+    let activeMimeType = "image/png";
+    let lastAnalysisReport = "";
+
+    const apiKeyInput = document.getElementById('apiKey');
+    const modelSelect = document.getElementById('modelSelect');
+    const fileInput = document.getElementById('fileInput');
+    const previewContainer = document.getElementById('previewContainer');
+    const imagePreview = document.getElementById('imagePreview');
+    const fileName = document.getElementById('fileName');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const useSampleBtn = document.getElementById('useSampleBtn');
+    const resultsSection = document.getElementById('resultsSection');
+    const markdownOutput = document.getElementById('markdownOutput');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    // Handle File Upload
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        activeMimeType = file.type || 'image/png';
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          imagePreview.src = event.target.result;
+          activeImageBase64 = event.target.result.split(',')[1];
+          fileName.textContent = file.name;
+          previewContainer.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Sample Stacktrace Generator
+    useSampleBtn.addEventListener('click', () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 800;
+      canvas.height = 320;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#1e1e1e';
+      ctx.fillRect(0, 0, 800, 320);
+
+      ctx.fillStyle = '#2d2d2d';
+      ctx.fillRect(0, 0, 800, 32);
+      ctx.fillStyle = '#ff5f56'; ctx.beginPath(); ctx.arc(20, 16, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ffbd2e'; ctx.beginPath(); ctx.arc(36, 16, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#27c93f'; ctx.beginPath(); ctx.arc(52, 16, 5, 0, Math.PI*2); ctx.fill();
+
+      ctx.font = '13px monospace';
+      ctx.fillStyle = '#00ff88'; ctx.fillText('$ python -m app.main', 20, 60);
+      ctx.fillStyle = '#ff5555'; ctx.fillText('Traceback (most recent call last):', 20, 90);
+      ctx.fillStyle = '#cccccc'; ctx.fillText('  File "/workspace/app/main.py", line 42, in <module>', 20, 115);
+      ctx.fillStyle = '#cccccc'; ctx.fillText('    user_data = parse_user_payload(request.json)', 20, 140);
+      ctx.fillStyle = '#cccccc'; ctx.fillText('  File "/workspace/app/main.py", line 18, in parse_user_payload', 20, 165);
+      ctx.fillStyle = '#cccccc'; ctx.fillText('    token_expiry = datetime.fromtimestamp(payload[\'exp\'])', 20, 190);
+      ctx.fillStyle = '#ff5555'; ctx.fillText('KeyError: \'exp\' - User JWT payload missing required expiration claim', 20, 220);
+      ctx.fillStyle = '#ffb86c'; ctx.fillText('[CRITICAL] Server failed to start due to unhandled KeyError.', 20, 255);
+      ctx.fillStyle = '#8be9fd'; ctx.fillText('Suggested fix: Check payload.get(\'exp\') or validate token claims.', 20, 280);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      imagePreview.src = dataUrl;
+      activeImageBase64 = dataUrl.split(',')[1];
+      activeMimeType = 'image/png';
+      fileName.textContent = 'sample_python_keyerror.png';
+      previewContainer.classList.remove('hidden');
+    });
+
+    // Run Analysis
+    analyzeBtn.addEventListener('click', async () => {
+      const apiKey = apiKeyInput.value.trim();
+      if (!apiKey) {
+        alert('Please enter your Gemini API Key in the top field.');
+        apiKeyInput.focus();
+        return;
+      }
+      if (!activeImageBase64) {
+        alert('Please upload a screenshot or click "Load Sample Stacktrace".');
+        return;
+      }
+
+      const model = modelSelect.value;
+      const project = document.getElementById('projectInput').value.trim();
+      const notes = document.getElementById('notesInput').value.trim();
+      const code = document.getElementById('codeInput').value.trim();
+
+      analyzeBtn.disabled = true;
+      analyzeBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Analyzing Visual Evidence...</span>';
+      resultsSection.classList.add('hidden');
+
+      const prompt = `
+You are an expert Principal Software Engineer and Open Source Triage Maintainer.
+Analyze the provided screenshot (which may be a terminal stack trace, browser console error, compiler log, or broken UI).
+
+Context:
+- Project: ${project || 'Not specified'}
+- User Notes: ${notes || 'None'}
+- Suspected Code: ${code || 'None'}
+
+Please provide your response structured in clear GitHub-flavored Markdown:
+## 1. 🚨 Issue Summary & Classification
+- **Issue Title**: Concise, descriptive title for a GitHub issue
+- **Severity**: [Critical / High / Medium / Low]
+- **Category**: [Runtime Exception / Visual Regression / Syntax Error / Environment & Dependency / Memory or Timeout]
+
+## 2. 🔍 Visual Diagnostics & Error Extraction
+- Transcribe the exact error messages, file paths, line numbers, or visual anomalies extracted from the screenshot.
+
+## 3. 🎯 Root Cause Analysis
+Explain clearly why this error occurred in 2-3 sentences.
+
+## 4. 🛠️ Step-by-Step Resolution & Proposed Code Fix
+Provide the exact, production-ready code patch with comments.
+
+## 5. 📋 Formatted GitHub Issue Template
+\`\`\`markdown
+# [Bug]: <Title>
+
+**Describe the Bug**
+...
+
+**Steps to Reproduce**
+1. ...
+
+**Expected Behavior**
+...
+
+**Actual Behavior**
+...
+
+**Environment**
+...
+
+**Proposed Solution**
+...
+\`\`\`
+`;
+
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const body = {
+          contents: [{
+            parts: [
+              { inline_data: { mime_type: activeMimeType, data: activeImageBase64 } },
+              { text: prompt }
+            ]
+          }]
+        };
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+        if (data.error) {
+          throw new Error(data.error.message || 'API error');
+        }
+
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated.';
+        lastAnalysisReport = text;
+        markdownOutput.innerHTML = marked.parse(text);
+        resultsSection.classList.remove('hidden');
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        alert('Analysis failed: ' + err.message);
+      } finally {
+        analyzeBtn.disabled = false;
+        analyzeBtn.innerHTML = '<i class="fa-solid fa-bolt"></i><span>Analyze Screenshot & Generate Issue</span>';
+      }
+    });
+
+    // Download Report
+    downloadBtn.addEventListener('click', () => {
+      const blob = new Blob([lastAnalysisReport], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'buglens_triage_report.md';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
