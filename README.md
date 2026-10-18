@@ -16,6 +16,16 @@ Built and submitted for **Hacktoberfest Hack Day Bengaluru 2026 (BMSCE IEEE Comp
 
 ---
 
+## 📸 Screenshots & Live Demo
+
+### 1. Visual Bug & Stack Trace Ingestion Dashboard
+![BugLens Input Dashboard](assets/buglens-input-ui.png)
+
+### 2. Automated Root-Cause Diagnosis, Code Patch & Issue Generation
+![BugLens Analysis Report](assets/buglens-analysis-report.png)
+
+---
+
 ## 🏆 Hackathon Submission Details
 
 * **Event:** Hacktoberfest Hack Day Bengaluru 2026
