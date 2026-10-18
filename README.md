@@ -53,7 +53,7 @@ flowchart LR
 
 ### 1. Clone & Enter Directory
 ```bash
-git clone https://github.com/your-username/buglens.git
+git clone https://github.com/swatiicfai/buglens.git
 cd buglens
 ```
 
